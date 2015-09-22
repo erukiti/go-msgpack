@@ -24,9 +24,9 @@ func (d *Decoder) next() byte {
 	for {
 		c, err := d.reader.ReadByte()
 		if err != nil {
-			// if err == io.EOF {
-			// 	continue
-			// }
+			if err == io.EOF {
+				continue
+			}
 			fmt.Printf("error: %s\n", err)
 			panic("I/O error")
 		}
@@ -118,21 +118,21 @@ func (d *Decoder) decodeArray(n int) (interface{}, error) {
 func (d *Decoder) decodeString(n int) (interface{}, error) {
 	// var err error
 
-	buf := [32]byte{}
+	buf := make([]byte, n)
 	for i := 0; i < n; i++ {
 		buf[i] = d.next()
 	}
-	return string(buf[:n]), nil
+	return string(buf), nil
 }
 
 func (d *Decoder) decodeBinary(n int) (interface{}, error) {
 	// var err error
 
-	buf := [32]byte{}
+	buf := make([]byte, n)
 	for i := 0; i < n; i++ {
 		buf[i] = d.next()
 	}
-	return buf[:n], nil
+	return buf, nil
 }
 
 func (d *Decoder) decode() (interface{}, error) {

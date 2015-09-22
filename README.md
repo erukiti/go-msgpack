@@ -1,7 +1,7 @@
 go-msgpack
 ==========
 
-This is msgpack implement by Golang.
+This is msgpack implement for Golang.
 
 example.
 --------
