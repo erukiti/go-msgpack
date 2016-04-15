@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"time"
 )
 
 var (
@@ -25,10 +26,14 @@ func (d *Decoder) next() byte {
 		c, err := d.reader.ReadByte()
 		if err != nil {
 			if err == io.EOF {
-				// time.Sleep(1 * time.Millisecond)
-				fmt.Printf("EOF")
-				panic("EOF")
+				// 終了と、入力待ちの区別を付ける方法がない
+				time.Sleep(1 * time.Millisecond)
+				continue
+				// log.Println("EOF")
+				// fmt.Printf("EOF")
+				// panic("EOF")
 			}
+			log.Printf("error: %s\n", err)
 			fmt.Printf("error: %s\n", err)
 			panic("I/O error")
 		}
