@@ -25,7 +25,9 @@ func (d *Decoder) next() byte {
 		c, err := d.reader.ReadByte()
 		if err != nil {
 			if err == io.EOF {
-				continue
+				// time.Sleep(1 * time.Millisecond)
+				fmt.Printf("EOF")
+				panic("EOF")
 			}
 			fmt.Printf("error: %s\n", err)
 			panic("I/O error")
