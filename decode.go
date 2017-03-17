@@ -3,6 +3,7 @@ package msgpack
 import (
 	"fmt"
 	"io"
+	"log"
 	"reflect"
 	"time"
 )
