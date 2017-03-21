@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -35,7 +36,6 @@ func (d *Decoder) next() byte {
 				// panic("EOF")
 			}
 			log.Printf("error: %s\n", err)
-			fmt.Printf("error: %s\n", err)
 			panic("I/O error")
 		}
 		return c
@@ -468,17 +468,25 @@ func (d *Decoder) bindObject(value interface{}, ptrList ...interface{}) int {
 			isFailed := false
 			for i := 0; i < v2.Elem().NumField(); i++ {
 				field := v2.Elem().Type().Field(i)
+				ar := strings.SplitN(field.Tag.Get("msgpack"), "=", 2)
 				var name string
-				if field.Tag.Get("msgpack") != "" {
-					name = field.Tag.Get("msgpack")
-				} else {
+				if ar[0] == "" {
 					name = field.Name
+				} else {
+					name = ar[0]
 				}
 
 				mapIndex := v.MapIndex(reflect.ValueOf(name))
 				if !mapIndex.IsValid() {
 					isFailed = true
 					break
+				}
+
+				if len(ar) == 2 && mapIndex.Type().String() == "string" {
+					if mapIndex.String() != ar[1] {
+						isFailed = true
+						break
+					}
 				}
 
 				fv := v2.Elem().Field(i)
@@ -507,6 +515,7 @@ func (d *Decoder) Decode(ptrList ...interface{}) (interface{}, int, error) {
 	if err != nil {
 		return value, -1, err
 	}
+
 	ind := d.bindObject(value, ptrList...)
 	return value, ind, nil
 }

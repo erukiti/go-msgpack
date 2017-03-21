@@ -1,11 +1,12 @@
 package msgpack
 
 import (
-  "reflect"
-  "encoding/binary"
-  "io"
-  "math"
-  "fmt"
+	"encoding/binary"
+	"fmt"
+	"io"
+	"math"
+	"reflect"
+	"strings"
 )
 
 type Encoder struct {
@@ -35,6 +36,10 @@ func (e *Encoder) Encode(data interface{}) error {
 		v = v.Elem()
 	}
 
+	if !v.IsValid() {
+		return fmt.Errorf("invalid")
+	}
+
 	switch v.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		n := v.Int()
@@ -59,7 +64,6 @@ func (e *Encoder) Encode(data interface{}) error {
 		return nil
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-
 		n := v.Uint()
 
 		if n > math.MaxInt32 {
@@ -120,7 +124,7 @@ func (e *Encoder) Encode(data interface{}) error {
 		} else {
 			return e.encodeArray(v, v.Len())
 		}
-	
+
 	case reflect.Array:
 		return e.encodeArray(v, v.Len())
 
@@ -145,11 +149,11 @@ func (e *Encoder) Encode(data interface{}) error {
 		}
 
 		for _, key := range v.MapKeys() {
-			e.Encode(key)
-			e.Encode(v.MapIndex(key))
+			e.Encode(key.Interface())
+			e.Encode(v.MapIndex(key).Interface())
 		}
 		return nil
-	
+
 	case reflect.Struct:
 		ln := v.NumField()
 
@@ -165,13 +169,14 @@ func (e *Encoder) Encode(data interface{}) error {
 			return fmt.Errorf("Struct over length: %d", ln)
 		}
 
-		for i:= 0; i < ln; i++ {
+		for i := 0; i < ln; i++ {
 			field := v.Type().Field(i)
+			ar := strings.SplitN(field.Tag.Get("msgpack"), "=", 2)
 			var name string
-			if field.Tag.Get("msgpack") != "" {
-				name = field.Tag.Get("msgpack")
-			} else {
+			if ar[0] == "" {
 				name = field.Name
+			} else {
+				name = ar[0]
 			}
 
 			e.Encode(name)
@@ -201,7 +206,7 @@ func (e *Encoder) encodeBytes(v reflect.Value, ln int) error {
 }
 
 func (e *Encoder) encodeArray(v reflect.Value, ln int) error {
-	if v.Type().Kind() == reflect.Uint8 {
+	if v.Type().Elem().String() == "uint8" {
 		return e.encodeBytes(v, ln)
 	}
 
